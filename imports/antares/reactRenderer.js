@@ -6,7 +6,7 @@ import { mount } from 'react-mounter'
 
 const eventHandlers = {
     sendASmile: () => {
-        Antares.announce('surprise!')
+        Antares.announce('smile!')
     }
 }
 
@@ -19,7 +19,7 @@ const WelcomeComponent = ({ sendASmile }) => (
 
 const Smiler = ({ sendASmile }) => (
     <div>
-        <div>Smile!</div>
+        <div style={{ fontSize: '1000%' }}>:)</div>
         <br/>
         <button onClick={ sendASmile }>Send A Smile!</button>
     </div>
@@ -30,20 +30,27 @@ const smilerElement = <Smiler { ...eventHandlers } />
 
 // ensure we have a #react-root upon load
 mount(()=>(welcomeElement))
+let reactRoot
+
+const { Rx } = Antares
+const cancelTimers = new Rx.Subject
 
 // A function that can be run in order to change the contents of react-root
-// then change them back after a delay
+// sets up a delay
 const reactRenderer = ({ action }) => {
-    const reactRoot = document.getElementById('react-root')
+    reactRoot = document.getElementById('react-root')
     ReactDOM.render(smilerElement, reactRoot)
 
-    // NOTE We can do better than this code which would need clearTimeouts
-    // for certain cases. We'll use Observables with switchMap later..
-    // But this'll work as long as we dont fire off events too quickly..
-    setTimeout(() => {
-        ReactDOM.render(welcomeElement, reactRoot)
-    }, 2000)
+    cancelTimers.next(Rx.Observable.timer(2000))
 }
+
+// Via 'switch', we only follow the most recent delay, canceling the previous
+const mostRecentCancel = cancelTimers.asObservable().switch()
+
+// actually cancel, each time a mostRecentCancel timer comes due
+mostRecentCancel.subscribe(() => {
+    ReactDOM.render(welcomeElement, reactRoot)
+})
 
 // Only on the client side, we subscribe this renderer to run upon the 
 // appropriate actions being received. 
@@ -55,6 +62,6 @@ const reactRenderer = ({ action }) => {
 inAgencyRun('client', () => {
     Antares.subscribeRenderer(reactRenderer, {
         xform: action$ =>
-                action$.filter(({ action }) => action.type === 'surprise!')
+                action$.filter(({ action }) => action.type === 'smile!')
     })
 })
