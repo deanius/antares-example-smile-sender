@@ -11,3 +11,8 @@ inAgencyRun('any', function () {
         Antares
     })
 })
+
+inAgencyRun('client', () => {
+    // Tell us all the news !
+    Antares.subscribe('*')
+})
