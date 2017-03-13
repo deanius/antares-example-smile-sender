@@ -16,3 +16,17 @@ inAgencyRun('client', () => {
     // Tell us all the news !
     Antares.subscribe('*')
 })
+
+inAgencyRun('server', () => {
+    // Allow us to handle actions targeting a key 'Declan'
+    Antares.announce({
+        type: 'Antares.store',
+        payload: {},
+        meta: {
+            antares: {
+                key: 'Declan',
+                localOnly: true
+            }
+        }
+    })
+})
